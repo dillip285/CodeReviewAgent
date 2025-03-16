@@ -9,17 +9,17 @@ graph TD
     Worker -->|Post Comment| GitLab
     API -->|Broker/Backend| Redis[Redis]
     Celery -->|Broker/Backend| Redis
-    
+
     subgraph AWS
         SQS
         Bedrock
         EKS[Amazon EKS]
     end
     
-    subgraph Kubernetes Cluster
+    subgraph Kubernetes_Cluster[Kubernetes Cluster]
         API
         Worker
         Redis
     end
     
-    EKS -->|Hosts| Kubernetes Cluster
+    EKS -->|Hosts| Kubernetes_Cluster
