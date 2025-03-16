@@ -1,0 +1,46 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudFormation template for Code Review Agent SQS queue'
+
+Resources:
+  CodeReviewQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: code-review-queue
+      VisibilityTimeout: 900  # 15 minutes
+      MessageRetentionPeriod: 1209600  # 14 days
+      DelaySeconds: 0
+      ReceiveMessageWaitTimeSeconds: 20  # Long polling
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt CodeReviewDeadLetterQueue.Arn
+        maxReceiveCount: 5  # Number of times a message can be received before being sent to the DLQ
+
+  CodeReviewDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: code-review-dlq
+      MessageRetentionPeriod: 1209600  # 14 days
+
+Outputs:
+  CodeReviewQueueURL:
+    Description: URL of the Code Review SQS Queue
+    Value: !Ref CodeReviewQueue
+    Export:
+      Name: CodeReviewQueueURL
+
+  CodeReviewQueueARN:
+    Description: ARN of the Code Review SQS Queue
+    Value: !GetAtt CodeReviewQueue.Arn
+    Export:
+      Name: CodeReviewQueueARN
+
+  CodeReviewDeadLetterQueueURL:
+    Description: URL of the Code Review Dead Letter Queue
+    Value: !Ref CodeReviewDeadLetterQueue
+    Export:
+      Name: CodeReviewDeadLetterQueueURL
+
+  CodeReviewDeadLetterQueueARN:
+    Description: ARN of the Code Review Dead Letter Queue
+    Value: !GetAtt CodeReviewDeadLetterQueue.Arn
+    Export:
+      Name: CodeReviewDeadLetterQueueARN

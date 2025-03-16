@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: code-review-config
+  namespace: code-review
+data:
+  AWS_REGION: "us-west-2"
+  SQS_QUEUE_URL: "https://sqs.us-west-2.amazonaws.com/123456789012/code-review-queue"
+  LOG_LEVEL: "INFO"
+  MAX_RETRIES: "3"
+  RETRY_DELAY: "5"
+  MAX_DIFF_SIZE: "100000"
+  BEDROCK_MODEL_ID_PRIMARY: "anthropic.claude-instant-v1"
+  BEDROCK_MODEL_ID_FALLBACK: "amazon.titan-text-lite-v1"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: code-review-secrets
+  namespace: code-review
+type: Opaque
+data:
+  # These values should be base64 encoded
+  GITLAB_URL: "aHR0cHM6Ly9naXRsYWIuZXhhbXBsZS5jb20="  # https://gitlab.example.com
+  GITLAB_API_TOKEN: "eW91cl9naXRsYWJfYXBpX3Rva2Vu"  # your_gitlab_api_token
+  GITLAB_WEBHOOK_TOKEN: "eW91cl9naXRsYWJfd2ViaG9va190b2tlbg=="  # your_gitlab_webhook_token
+  JIRA_URL: "aHR0cHM6Ly9qaXJhLmV4YW1wbGUuY29t"  # https://jira.example.com
+  JIRA_USERNAME: "eW91cl9qaXJhX3VzZXJuYW1l"  # your_jira_username
+  JIRA_API_TOKEN: "eW91cl9qaXJhX2FwaV90b2tlbg=="  # your_jira_api_token
+  AWS_ACCESS_KEY_ID: "eW91cl9hd3NfYWNjZXNzX2tleV9pZA=="  # your_aws_access_key_id
+  AWS_SECRET_ACCESS_KEY: "eW91cl9hd3Nfc2VjcmV0X2FjY2Vzc19rZXk="  # your_aws_secret_access_key
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: code-review-worker
+  namespace: code-review
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: code-review

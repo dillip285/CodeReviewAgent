@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: code-review-worker
+  namespace: code-review
+  labels:
+    app: code-review-worker
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: code-review-worker
+  template:
+    metadata:
+      labels:
+        app: code-review-worker
+    spec:
+      containers:
+      - name: worker
+        image: ${ECR_REPOSITORY_URI}/code-review-worker:latest
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "512Mi"
+          limits:
+            cpu: "1000m"
+            memory: "1Gi"
+        env:
+        - name: AWS_REGION
+          valueFrom:
+            configMapKeyRef:
+              name: code-review-config
+              key: AWS_REGION
+        - name: SQS_QUEUE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: code-review-config
+              key: SQS_QUEUE_URL
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: code-review-config
+              key: LOG_LEVEL
+        - name: MAX_RETRIES
+          valueFrom:
+            configMapKeyRef:
+              name: code-review-config
+              key: MAX_RETRIES
+        - name: RETRY_DELAY
+          valueFrom:
+            configMapKeyRef:
+              name: code-review-config
+              key: RETRY_DELAY
+        - name: MAX_DIFF_SIZE
+          valueFrom:
+            configMapKeyRef:
+              name: code-review-config
+              key: MAX_DIFF_SIZE
+        - name: BEDROCK_MODEL_ID_PRIMARY
+          valueFrom:
+            configMapKeyRef:
+              name: code-review-config
+              key: BEDROCK_MODEL_ID_PRIMARY
+        - name: BEDROCK_MODEL_ID_FALLBACK
+          valueFrom:
+            configMapKeyRef:
+              name: code-review-config
+              key: BEDROCK_MODEL_ID_FALLBACK
+        # Secrets
+        - name: GITLAB_URL
+          valueFrom:
+            secretKeyRef:
+              name: code-review-secrets
+              key: GITLAB_URL
+        - name: GITLAB_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: code-review-secrets
+              key: GITLAB_API_TOKEN
+        - name: JIRA_URL
+          valueFrom:
+            secretKeyRef:
+              name: code-review-secrets
+              key: JIRA_URL
+        - name: JIRA_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: code-review-secrets
+              key: JIRA_USERNAME
+        - name: JIRA_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: code-review-secrets
+              key: JIRA_API_TOKEN
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: code-review-secrets
+              key: AWS_ACCESS_KEY_ID
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: code-review-secrets
+              key: AWS_SECRET_ACCESS_KEY
+      serviceAccountName: code-review-worker

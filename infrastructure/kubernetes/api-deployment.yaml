@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: code-review-api
+  namespace: code-review
+  labels:
+    app: code-review-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: code-review-api
+  template:
+    metadata:
+      labels:
+        app: code-review-api
+    spec:
+      containers:
+      - name: api
+        image: ${ECR_REPOSITORY_URI}/code-review-api:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+        env:
+        - name: AWS_REGION
+          valueFrom:
+            configMapKeyRef:
+              name: code-review-config
+              key: AWS_REGION
+        - name: SQS_QUEUE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: code-review-config
+              key: SQS_QUEUE_URL
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: code-review-config
+              key: LOG_LEVEL
+        - name: CELERY_BROKER_URL
+          value: "redis://redis:6379/0"
+        - name: CELERY_RESULT_BACKEND
+          value: "redis://redis:6379/0"
+        # Secrets
+        - name: GITLAB_URL
+          valueFrom:
+            secretKeyRef:
+              name: code-review-secrets
+              key: GITLAB_URL
+        - name: GITLAB_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: code-review-secrets
+              key: GITLAB_API_TOKEN
+        - name: GITLAB_WEBHOOK_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: code-review-secrets
+              key: GITLAB_WEBHOOK_TOKEN
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: code-review-secrets
+              key: AWS_ACCESS_KEY_ID
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: code-review-secrets
+              key: AWS_SECRET_ACCESS_KEY
+      serviceAccountName: code-review-api
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: code-review-api
+  namespace: code-review
+spec:
+  selector:
+    app: code-review-api
+  ports:
+  - port: 80
+    targetPort: 8000
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: code-review-api
+  namespace: code-review

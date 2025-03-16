@@ -1,0 +1,25 @@
+graph TD
+    GitLab[GitLab] -->|Webhook| API[FastAPI Application]
+    API -->|Task| Celery[Celery Workers]
+    Celery -->|Message| SQS[AWS SQS Queue]
+    SQS -->|Message| Worker[Kubernetes Worker Pods]
+    Worker -->|Fetch Diff| GitLab
+    Worker -->|Fetch Ticket Info| Jira[Jira]
+    Worker -->|Generate Review| Bedrock[AWS Bedrock]
+    Worker -->|Post Comment| GitLab
+    API -->|Broker/Backend| Redis[Redis]
+    Celery -->|Broker/Backend| Redis
+    
+    subgraph AWS
+        SQS
+        Bedrock
+        EKS[Amazon EKS]
+    end
+    
+    subgraph Kubernetes Cluster
+        API
+        Worker
+        Redis
+    end
+    
+    EKS -->|Hosts| Kubernetes Cluster
